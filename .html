@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nubank - Interface</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Graphik:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Animação do Modal Sheet */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75);
+      transition: opacity 0.25s ease-out;
+    }
+    .sheet-content {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sheet-hidden {
+      transform: translateY(100%);
+    }
+    .sheet-visible {
+      transform: translateY(0);
+    }
+
+    /* Efeito ao focar no elemento editável */
+    [contenteditable="true"]:focus {
+      outline: 2px solid #8A19D6;
+      border-radius: 4px;
+      padding: 0 4px;
+      background-color: rgba(138, 25, 214, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-black text-white antialiased flex justify-center min-h-screen">
+
+  <!-- Container Mobile -->
+  <div class="w-full max-w-md bg-black min-h-screen relative flex flex-col pb-12 overflow-x-hidden">
+
+    <!-- INPUT OCULTO PARA SELECIONAR FOTO DE PERFIL -->
+    <input type="file" id="profile-picture-input" accept="image/*" class="hidden" onchange="loadProfilePicture(event)">
+
+    <!-- TOPO / CABEÇALHO (ROXO NUBANK) -->
+    <div class="bg-[#8A19D6] px-5 pt-8 pb-6 flex flex-col justify-between">
+      <!-- Ícones de Ação da Conta -->
+      <div class="flex justify-between items-center mb-6">
+        <!-- Ícone Perfil com opção de carregar imagem -->
+        <div class="relative cursor-pointer group" onclick="triggerProfileUpload()" title="Clique para mudar a foto de perfil">
+          <div id="profile-container" class="w-12 h-12 rounded-full bg-[#9B3BDB] flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-white transition">
+            <i id="profile-default-icon" class="fa-solid fa-user text-white text-lg"></i>
+            <img id="profile-img" class="w-full h-full object-cover hidden" alt="Foto de Perfil">
+          </div>
+          <!-- Badge com ícone de câmara -->
+          <div class="absolute -top-1 -right-1 w-5 h-5 bg-white text-[#8A19D6] rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+            <i class="fa-solid fa-camera text-[10px]"></i>
+          </div>
+        </div>
+
+        <!-- Botões de Atalho no Topo -->
+        <div class="flex items-center space-x-5">
+          <!-- Olho (Ocultar/Exibir Saldo) -->
+          <button onclick="toggleVisibility()" class="focus:outline-none p-1 text-white opacity-90 hover:opacity-100">
+            <i id="eye-icon" class="fa-solid fa-eye text-lg"></i>
+          </button>
+          <!-- Ajuda -->
+          <button onclick="openModal('Ajuda e Suporte', 'Como podemos te ajudar hoje? Acesse as perguntas frequentes ou fale com o chat 24h.')" class="focus:outline-none p-1 text-white opacity-90 hover:opacity-100">
+            <i class="fa-regular fa-circle-question text-xl"></i>
+          </button>
+          <!-- Indicar Amigos -->
+          <button onclick="openModal('Indicar Amigos', 'Envie um convite para seus amigos e ajude-os a ter uma vida financeira sem burocracia!')" class="focus:outline-none p-1 text-white opacity-90 hover:opacity-100">
+            <i class="fa-solid fa-user-plus text-base"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Saudação / Nome (EDITÁVEL AO CLICAR) -->
+      <div class="mt-2">
+        <h1 class="text-xl font-bold tracking-wide flex items-center gap-1">
+          <span>Olá, </span>
+          <span id="user-name" contenteditable="true" spellcheck="false" class="cursor-pointer hover:underline">Elon Musk</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL (MODO ESCURO) -->
+    <div class="px-5 pt-6 space-y-6">
+
+      <!-- SEÇÃO CONTA E SALDO (EDITÁVEL) -->
+      <div onclick="openAccountDetails()" class="cursor-pointer group">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-lg font-semibold tracking-wide group-hover:text-gray-300">Conta</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400 group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <!-- Valor do Saldo -->
+        <div class="mt-1">
+          <span id="account-balance" contenteditable="true" spellcheck="false" class="text-2xl font-bold tracking-tight block">R$ 20.000.000.000,60</span>
+        </div>
+      </div>
+
+      <!-- BOTÕES DE ATALHOS RÁPIDOS -->
+      <div class="flex space-x-3 overflow-x-auto no-scrollbar py-2 -mx-5 px-5">
+        
+        <!-- Área Pix -->
+        <div onclick="openModal('Área Pix', 'Envie e receba pagamentos a qualquer hora, 7 dias por semana.', true)" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-brands fa-pix text-xl"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight">Área Pix</span>
+        </div>
+
+        <!-- Transferir -->
+        <div onclick="openTransferModal()" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid fa-money-bill-transfer text-lg"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight">Transferir</span>
+        </div>
+
+        <!-- Pegar emprestado (com Badge FGTS) -->
+        <div onclick="openModal('Pegar emprestado', 'Simule e contrate empréstimos com taxas personalizadas de forma rápida.')" class="flex flex-col items-center min-w-[76px] cursor-pointer group relative">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid font-bold fa-hand-holding-dollar text-lg"></i>
+          </div>
+          <span class="absolute top-0 bg-[#8A19D6] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">FGTS</span>
+          <span class="text-xs text-center font-medium leading-tight max-w-[70px]">Pegar emprestado</span>
+        </div>
+
+        <!-- Pagar -->
+        <div onclick="openModal('Pagar', 'Pague boletos, faturas do cartão ou contas de consumo com o leitor de código de barras.')" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid fa-barcode text-lg"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight">Pagar</span>
+        </div>
+
+        <!-- Recarga de Celular -->
+        <div onclick="openModal('Recarga de celular', 'Coloque créditos no seu celular de qualquer operadora sem taxas.')" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight max-w-[70px]">Recarga de celular</span>
+        </div>
+
+        <!-- Depositar -->
+        <div onclick="openDepositModal()" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid fa-circle-arrow-down text-lg"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight">Depositar</span>
+        </div>
+
+        <!-- Caixinhas -->
+        <div onclick="openModal('Caixinhas', 'Guarde dinheiro para seus objetivos com rendimento superior à poupança.')" class="flex flex-col items-center min-w-[76px] cursor-pointer group">
+          <div class="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-white mb-2 group-active:scale-95 transition-transform">
+            <i class="fa-solid fa-box-archive text-lg"></i>
+          </div>
+          <span class="text-xs text-center font-medium leading-tight">Caixinhas</span>
+        </div>
+
+      </div>
+
+      <!-- MEUS CARTÕES -->
+      <div onclick="openModal('Meus Cartões', 'Gerencie seus cartões físicos e crie cartões virtuais para compras online com segurança.')" class="bg-[#191919] rounded-2xl p-4 flex items-center space-x-3 cursor-pointer hover:bg-[#222222] transition-colors">
+        <i class="fa-solid fa-credit-card text-lg text-white"></i>
+        <span class="text-sm font-semibold tracking-wide">Meus cartões</span>
+      </div>
+
+      <!-- CARDS PROMOCIONAIS -->
+      <div class="flex space-x-3 overflow-x-auto no-scrollbar -mx-5 px-5">
+        <div onclick="openModal('Nubank Vida', 'Conheça os seguros do Nubank com coberturas simples e acessíveis.')" class="bg-[#191919] min-w-[260px] max-w-[260px] p-4 rounded-2xl cursor-pointer hover:bg-[#222222] transition">
+          <p class="text-xs text-gray-300 leading-relaxed font-normal">
+            Prêmios mensais com Nubank Vida a partir de <span class="font-bold text-white">R$4/mês</span>
+          </p>
+        </div>
+        <div onclick="openModal('Nubank Ultra', 'Acesse benefícios exclusivos do ecossistema de alta renda do Nubank.')" class="bg-[#191919] min-w-[260px] max-w-[260px] p-4 rounded-2xl cursor-pointer hover:bg-[#222222] transition">
+          <p class="text-xs text-gray-300 leading-relaxed font-normal">
+            Peça seu <span class="font-bold text-[#9B3BDB]">Cartão Ultravioleta</span> e tenha 1% de Cashback.
+          </p>
+        </div>
+      </div>
+
+      <hr class="border-gray-900 my-2">
+
+      <!-- SEÇÃO CARTÃO DE CRÉDITO -->
+      <div class="space-y-2 cursor-pointer group" onclick="openModal('Cartão de Crédito', 'Detalhes da sua fatura, limite disponível e opções de parcelamento.')">
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-semibold tracking-wide group-hover:text-gray-300">Cartão de crédito</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400 group-hover:translate-x-1 transition-transform"></i>
+        </div>
+        <div>
+          <span class="text-xs text-gray-400 font-medium block">Fatura atual</span>
+          <span id="credit-card-invoice" contenteditable="true" spellcheck="false" class="text-xl font-bold mt-0.5 block">R$ 1.250,80</span>
+        </div>
+        <p class="text-xs text-gray-400">
+          Limite disponível de <span id="credit-card-limit" contenteditable="true" spellcheck="false" class="font-semibold text-gray-300">R$ 45.000,00</span>
+        </p>
+      </div>
+
+      <hr class="border-gray-900 my-2">
+
+      <!-- SEÇÃO EMPRÉSTIMO -->
+      <div class="space-y-1 cursor-pointer group" onclick="openModal('Empréstimo', 'Valor disponível para contratação imediata direto na sua conta.')">
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-semibold tracking-wide group-hover:text-gray-300">Empréstimo</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400 group-hover:translate-x-1 transition-transform"></i>
+        </div>
+        <p class="text-xs text-gray-400">
+          Valor disponível de até <span class="text-gray-200 font-medium">R$ 25.000,00</span>
+        </p>
+      </div>
+
+      <hr class="border-gray-900 my-2">
+
+      <!-- SEÇÃO INVESTIMENTOS -->
+      <div class="space-y-1 cursor-pointer group" onclick="openModal('Investimentos', 'Invista em Ações, FIIs, Tesouro Direto e Cripto com facilidade.')">
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-semibold tracking-wide group-hover:text-gray-300">Investimentos</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400 group-hover:translate-x-1 transition-transform"></i>
+        </div>
+        <p class="text-xs text-gray-400">
+          O jeito Nu de investir: sem burocracia e com opções a partir de R$ 1,00.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL FLUTUANTE DE INTERAÇÃO -->
+  <div id="modal-backdrop" class="fixed inset-0 modal-backdrop opacity-0 pointer-events-none z-50 flex items-end justify-center" onclick="closeModal()">
+    <div id="sheet-container" class="bg-[#121212] w-full max-w-md rounded-t-3xl p-6 text-white sheet-content sheet-hidden border-t border-gray-800" onclick="event.stopPropagation()">
+      <div class="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-5"></div>
+      
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-title" class="text-xl font-bold">Título</h3>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-800 text-gray-300 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="modal-body" class="text-sm text-gray-300 space-y-4 max-h-[60vh] overflow-y-auto pt-2">
+        <!-- Conteúdo dinâmico aqui -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isVisible = true;
+    let actualAccountBalance = "R$ 20.000.000.000,60";
+    let actualInvoice = "R$ 1.250,80";
+    let actualLimit = "R$ 45.000,00";
+
+    let statementHistory = [
+      { type: 'Entrada', title: 'Transferência recebida', name: 'Apple Inc.', date: 'Hoje', amount: 'R$ 5.000,00' },
+      { type: 'Saída', title: 'Pagamento efetuado', name: 'Starbucks', date: 'Ontem', amount: 'R$ 34,50' },
+      { type: 'Entrada', title: 'Depósito por Pix', name: 'Tesla Motors', date: '22 de Out', amount: 'R$ 1.500.000,00' }
+    ];
+
+    function triggerProfileUpload() {
+      document.getElementById('profile-picture-input').click();
+    }
+
+    function loadProfilePicture(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('profile-img');
+          const defaultIcon = document.getElementById('profile-default-icon');
+          img.src = e.target.result;
+          img.classList.remove('hidden');
+          defaultIcon.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleVisibility() {
+      const eyeIcon = document.getElementById('eye-icon');
+      const balanceElem = document.getElementById('account-balance');
+      const invoiceElem = document.getElementById('credit-card-invoice');
+      const limitElem = document.getElementById('credit-card-limit');
+
+      if (isVisible) {
+        actualAccountBalance = balanceElem.innerText;
+        actualInvoice = invoiceElem.innerText;
+        actualLimit = limitElem.innerText;
+
+        balanceElem.innerText = '••••';
+        invoiceElem.innerText = '••••';
+        limitElem.innerText = '••••';
+
+        balanceElem.contentEditable = "false";
+        invoiceElem.contentEditable = "false";
+        limitElem.contentEditable = "false";
+
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+        isVisible = false;
+      } else {
+        balanceElem.innerText = actualAccountBalance;
+        invoiceElem.innerText = actualInvoice;
+        limitElem.innerText = actualLimit;
+
+        balanceElem.contentEditable = "true";
+        invoiceElem.contentEditable = "true";
+        limitElem.contentEditable = "true";
+
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+        isVisible = true;
+      }
+    }
+
+    function openModal(title, text, isPix = false) {
+      document.getElementById('modal-title').innerText = title;
+      const body = document.getElementById('modal-body');
+
+      if (isPix) {
+        body.innerHTML = `
+          <p class="mb-4 text-gray-300">${text}</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="openTransferModal()" class="bg-[#8A19D6] text-white py-3 px-4 rounded-xl font-semibold text-center hover:bg-[#7a15bd] transition">
+              <i class="fa-solid fa-paper-plane mr-2"></i> Transferir
+            </button>
+            <button onclick="openDepositModal()" class="bg-[#222222] text-white py-3 px-4 rounded-xl font-semibold text-center hover:bg-[#2a2a2a] transition">
+              <i class="fa-solid fa-qrcode mr-2"></i> Receber
+            </button>
+          </div>
+        `;
+      } else {
+        body.innerHTML = `
+          <p class="text-gray-300 leading-relaxed">${text}</p>
+          <div class="pt-4">
+            <button onclick="closeModal()" class="w-full bg-[#8A19D6] text-white py-3 rounded-xl font-semibold hover:bg-[#7a15bd] transition">
+              Entendido
+            </button>
+          </div>
+        `;
+      }
+
+      showModalUI();
+    }
+
+    function showModalUI() {
+      const backdrop = document.getElementById('modal-backdrop');
+      const container = document.getElementById('sheet-container');
+      backdrop.classList.remove('pointer-events-none', 'opacity-0');
+      backdrop.classList.add('opacity-100');
+      container.classList.remove('sheet-hidden');
+      container.classList.add('sheet-visible');
+    }
+
+    function closeModal() {
+      const backdrop = document.getElementById('modal-backdrop');
+      const container = document.getElementById('sheet-container');
+      container.classList.remove('sheet-visible');
+      container.classList.add('sheet-hidden');
+      backdrop.classList.remove('opacity-100');
+      backdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function openTransferModal() {
+      document.getElementById('modal-title').innerText = 'Transferir Pix';
+      const body = document.getElementById('modal-body');
+
+      body.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-400 font-medium block mb-1">Qual o valor da transferência?</label>
+            <input type="number" id="transfer-amount" placeholder="0,00" class="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-4 py-3 text-white text-lg font-semibold focus:outline-none focus:border-[#8A19D6]">
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 font-medium block mb-1">Para quem? (Chave Pix ou Nome)</label>
+            <input type="text" id="transfer-target" placeholder="CPF, E-mail, Telefone ou Nome" class="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#8A19D6]">
+          </div>
+          <button onclick="executeTransfer()" class="w-full bg-[#8A19D6] text-white py-3.5 rounded-xl font-semibold hover:bg-[#7a15bd] transition mt-2">
+            Confirmar Transferência
+          </button>
+        </div>
+      `;
+      showModalUI();
+    }
+
+    function executeTransfer() {
+      const amountInput = document.getElementById('transfer-amount').value;
+      const targetInput = document.getElementById('transfer-target').value || 'Contato Pix';
+
+      const amountVal = parseFloat(amountInput);
+      if (isNaN(amountVal) || amountVal <= 0) {
+        alert('Por favor, informe um valor válido para transferência.');
+        return;
+      }
+
+      const balanceElem = document.getElementById('account-balance');
+      let currentValStr = balanceElem.innerText.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+      let currentVal = parseFloat(currentValStr) || 0;
+
+      currentVal -= amountVal;
+
+      const formatted = currentVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      balanceElem.innerText = formatted;
+      actualAccountBalance = formatted;
+
+      statementHistory.unshift({
+        type: 'Saída',
+        title: 'Transferência enviada',
+        name: targetInput,
+        date: 'Hoje',
+        amount: `- R$ ${amountVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      });
+
+      const body = document.getElementById('modal-body');
+      body.innerHTML = `
+        <div class="text-center py-4 space-y-3">
+          <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <h4 class="text-lg font-bold text-white">Transferência Realizada!</h4>
+          <p class="text-sm text-gray-300">Você enviou <span class="font-bold text-white">R$ ${amountVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> para <span class="font-bold text-white">${targetInput}</span> com sucesso.</p>
+          <button onclick="closeModal()" class="w-full bg-[#8A19D6] text-white py-3 rounded-xl font-semibold mt-4">
+            Concluir
+          </button>
+        </div>
+      `;
+    }
+
+    function openDepositModal() {
+      document.getElementById('modal-title').innerText = 'Depositar Dinheiro';
+      const body = document.getElementById('modal-body');
+
+      body.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-400 font-medium block mb-1">Quanto você deseja depositar?</label>
+            <input type="number" id="deposit-amount" placeholder="0,00" class="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-4 py-3 text-white text-lg font-semibold focus:outline-none focus:border-[#8A19D6]">
+          </div>
+          <button onclick="executeDeposit()" class="w-full bg-[#8A19D6] text-white py-3.5 rounded-xl font-semibold hover:bg-[#7a15bd] transition">
+            Simular Recebimento de Depósito
+          </button>
+        </div>
+      `;
+      showModalUI();
+    }
+
+    function executeDeposit() {
+      const amountInput = document.getElementById('deposit-amount').value;
+      const amountVal = parseFloat(amountInput);
+
+      if (isNaN(amountVal) || amountVal <= 0) {
+        alert('Por favor, digite um valor válido.');
+        return;
+      }
+
+      const balanceElem = document.getElementById('account-balance');
+      let currentValStr = balanceElem.innerText.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+      let currentVal = parseFloat(currentValStr) || 0;
+
+      currentVal += amountVal;
+
+      const formatted = currentVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      balanceElem.innerText = formatted;
+      actualAccountBalance = formatted;
+
+      statementHistory.unshift({
+        type: 'Entrada',
+        title: 'Depósito recebido',
+        name: 'Depósito via Pix',
+        date: 'Hoje',
+        amount: `+ R$ ${amountVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      });
+
+      const body = document.getElementById('modal-body');
+      body.innerHTML = `
+        <div class="text-center py-4 space-y-3">
+          <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+            <i class="fa-solid fa-arrow-down"></i>
+          </div>
+          <h4 class="text-lg font-bold text-white">Depósito Confirmado!</h4>
+          <p class="text-sm text-gray-300">Foi adicionado <span class="font-bold text-white">R$ ${amountVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span> à sua conta Nubank.</p>
+          <button onclick="closeModal()" class="w-full bg-[#8A19D6] text-white py-3 rounded-xl font-semibold mt-4">
+            Fechar
+          </button>
+        </div>
+      `;
+    }
+
+    function openAccountDetails() {
+      document.getElementById('modal-title').innerText = 'Histórico da Conta';
+      const body = document.getElementById('modal-body');
+
+      let itemsHtml = statementHistory.map(item => `
+        <div class="flex justify-between items-center py-3 border-b border-gray-800">
+          <div>
+            <p class="text-sm font-semibold text-white">${item.title}</p>
+            <p class="text-xs text-gray-400">${item.name} • ${item.date}</p>
+          </div>
+          <span class="text-sm font-bold ${item.type === 'Entrada' ? 'text-green-400' : 'text-white'}">
+            ${item.amount}
+          </span>
+        </div>
+      `).join('');
+
+      body.innerHTML = `
+        <div class="mb-4 bg-[#191919] p-4 rounded-xl">
+          <span class="text-xs text-gray-400 block">Saldo disponível</span>
+          <span class="text-xl font-bold text-white">${document.getElementById('account-balance').innerText}</span>
+        </div>
+        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Histórico de Transações</h4>
+        <div class="space-y-1">
+          ${itemsHtml}
+        </div>
+      `;
+
+      showModalUI();
+    }
+  </script>
+</body>
+</html>
